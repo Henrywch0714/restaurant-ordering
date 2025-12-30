@@ -8,7 +8,7 @@ const AI_CONFIG = {
     qwen: {
         apiKey: 'sk-ca0f66aeb99342bf9873e58007f0e829', // Get from https://dashscope.console.aliyun.com/
         model: 'qwen-turbo', // Options: 'qwen-turbo', 'qwen-plus', 'qwen-max', 'qwen2.5-72b-instruct'
-        endpoint: 'http://localhost:5000/api/qwen' // Proxy server endpoint (avoids CORS)
+        endpoint: 'https://web-production-f1d28.up.railway.app/api/qwen'
     },
     
     // Weather API Configuration (optional - for weather-based recommendations)
@@ -1017,4 +1017,5 @@ window.recommendationSystem = {
     clearChat: clearChat,
     getContextData: () => contextData
 };
+
 
