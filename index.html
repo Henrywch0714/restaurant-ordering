@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Delicious Bites Restaurant</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="icon-192.png">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <!-- Language Switcher -->
+            <div class="language-switcher">
+                <button class="lang-btn" id="langEn" onclick="switchLanguage('en')" title="English">EN</button>
+                <button class="lang-btn" id="langZh" onclick="switchLanguage('zh')" title="繁體中文 (粵語)">繁</button>
+                <button class="lang-btn" id="langZhCN" onclick="switchLanguage('zhCN')" title="简体中文 (普通话)">简</button>
+            </div>
+            
+            <h1>🍽️ Delicious Bites Restaurant</h1>
+            <p class="tagline">Order your favorite meals online</p>
+            
+            <!-- Date and Weather Display -->
+            <div class="context-display" id="contextDisplay">
+                <div class="context-item">
+                    <span class="context-icon">📅</span>
+                    <span class="context-text" id="dateDisplay">Loading...</span>
+                </div>
+                <div class="context-item">
+                    <span class="context-icon">🕐</span>
+                    <span class="context-text" id="timeDisplay">Loading...</span>
+                </div>
+                <div class="context-item" id="weatherDisplay" style="display: none;">
+                    <span class="context-icon">🌤️</span>
+                    <span class="context-text" id="weatherText">Loading weather...</span>
+                </div>
+            </div>
+            
+            <div class="special-needs-selector">
+                <span>Do you have any special dietary needs or allergies?</span>
+                <button class="special-needs-btn" id="specialNeedsBtn">Yes, I have special needs</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="menu-section">
+            <h2>Our Menu</h2>
+            <div class="category-tabs">
+                <button class="tab-btn active" data-category="all">All</button>
+                <button class="tab-btn" data-category="appetizers">Appetizers</button>
+                <button class="tab-btn" data-category="mains">Main Courses</button>
+                <button class="tab-btn" data-category="desserts">Desserts</button>
+                <button class="tab-btn" data-category="drinks">Drinks</button>
+            </div>
+            
+            <div class="menu-grid" id="menuGrid">
+                <!-- Menu items will be dynamically generated -->
+            </div>
+        </div>
+
+        <aside class="cart-section">
+            <div class="cart-header">
+                <h2>Your Order</h2>
+                <span class="cart-count" id="cartCount">0</span>
+            </div>
+            
+            <div class="cart-items" id="cartItems">
+                <p class="empty-cart">Your cart is empty</p>
+            </div>
+            
+            <div class="cart-footer">
+                <div class="cart-total">
+                    <span>Total: $<span id="cartTotal">0.00</span></span>
+                </div>
+                <button class="checkout-btn" id="checkoutBtn" disabled>Checkout</button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Chatbot Modal -->
+    <div class="modal" id="chatbotModal">
+        <div class="modal-content chatbot-modal">
+            <div class="chatbot-header">
+                <h2>🤖 Dietary Assistant</h2>
+                <span class="close" id="closeChatbot">&times;</span>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="message bot-message">
+                    <p>Hello! I'm here to help you find meals that suit your dietary needs. Please tell me about any allergies, health conditions, or dietary preferences you have. For example: "I have diabetes and a peanut allergy" or "I'm vegetarian and have a sore throat."</p>
+                </div>
+            </div>
+            <div class="chatbot-input-container">
+                <input type="text" id="chatbotInput" placeholder="Type your dietary needs here..." class="chatbot-input">
+                <button id="voiceInputBtn" class="voice-btn" title="Click to speak">
+                    <span class="voice-icon">🎤</span>
+                </button>
+                <button id="sendMessageBtn" class="send-btn">Send</button>
+            </div>
+            <div class="voice-status" id="voiceStatus" style="display: none;">
+                <span class="voice-indicator"></span>
+                <span id="voiceStatusText">Listening...</span>
+            </div>
+            <div class="chatbot-actions">
+                <button class="apply-recommendations-btn" id="applyRecommendationsBtn" disabled>Apply Recommendations</button>
+                <button class="clear-chat-btn" id="clearChatBtn">Clear Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="checkoutModal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h2>Order Confirmation</h2>
+            <div id="orderSummary"></div>
+            <div class="modal-total">
+                <strong>Total: $<span id="modalTotal">0.00</span></strong>
+            </div>
+            <button class="confirm-btn" id="confirmOrder">Confirm Order</button>
+        </div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="script.js"></script>
+    <script src="recommendation.js"></script>
+    
+    <!-- Service Worker Registration for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
