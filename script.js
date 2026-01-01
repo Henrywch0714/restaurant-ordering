@@ -1,41 +1,88 @@
-// Menu data with dietary tags
-const menuItems = [
-    // Appetizers
-    { id: 1, name: "Caesar Salad", description: "Fresh romaine lettuce with caesar dressing, croutons, and parmesan", price: 8.99, category: "appetizers", emoji: "🥗", tags: ["vegetarian", "gluten-free-option"], allergens: ["dairy"], restrictions: [] },
-    { id: 2, name: "Bruschetta", description: "Toasted bread topped with fresh tomatoes, basil, and mozzarella", price: 7.99, category: "appetizers", emoji: "🍞", tags: ["vegetarian"], allergens: ["gluten", "dairy"], restrictions: [] },
-    { id: 3, name: "Chicken Wings", description: "Crispy chicken wings with your choice of sauce", price: 10.99, category: "appetizers", emoji: "🍗", tags: [], allergens: [], restrictions: [] },
-    { id: 4, name: "Spring Rolls", description: "Vegetable spring rolls with sweet and sour sauce", price: 6.99, category: "appetizers", emoji: "🥟", tags: ["vegetarian"], allergens: [], restrictions: [] },
-    
-    // Main Courses
-    { id: 5, name: "Grilled Salmon", description: "Fresh salmon fillet with lemon butter sauce and vegetables", price: 18.99, category: "mains", emoji: "🐟", tags: ["low-carb", "high-protein"], allergens: ["fish"], restrictions: [] },
-    { id: 6, name: "Beef Steak", description: "Tender ribeye steak cooked to perfection with mashed potatoes", price: 24.99, category: "mains", emoji: "🥩", tags: ["high-protein", "low-carb"], allergens: [], restrictions: [] },
-    { id: 7, name: "Chicken Pasta", description: "Creamy pasta with grilled chicken and parmesan cheese", price: 14.99, category: "mains", emoji: "🍝", tags: ["high-protein"], allergens: ["gluten", "dairy"], restrictions: [] },
-    { id: 8, name: "Margherita Pizza", description: "Classic pizza with tomato, mozzarella, and fresh basil", price: 12.99, category: "mains", emoji: "🍕", tags: ["vegetarian"], allergens: ["gluten", "dairy"], restrictions: [] },
-    { id: 9, name: "Burger Deluxe", description: "Juicy beef burger with cheese, lettuce, tomato, and special sauce", price: 13.99, category: "mains", emoji: "🍔", tags: [], allergens: ["gluten", "dairy"], restrictions: [] },
-    { id: 10, name: "Vegetable Curry", description: "Spicy vegetable curry with rice and naan bread", price: 11.99, category: "mains", emoji: "🍛", tags: ["vegetarian", "vegan-option"], allergens: ["gluten"], restrictions: [] },
-    
-    // Desserts
-    { id: 11, name: "Chocolate Cake", description: "Rich chocolate layer cake with vanilla frosting", price: 7.99, category: "desserts", emoji: "🍰", tags: ["vegetarian"], allergens: ["gluten", "dairy", "eggs"], restrictions: ["high-sugar"] },
-    { id: 12, name: "Ice Cream Sundae", description: "Vanilla ice cream with chocolate sauce and whipped cream", price: 6.99, category: "desserts", emoji: "🍨", tags: ["vegetarian"], allergens: ["dairy"], restrictions: ["high-sugar"] },
-    { id: 13, name: "Cheesecake", description: "New York style cheesecake with berry compote", price: 8.99, category: "desserts", emoji: "🧁", tags: ["vegetarian"], allergens: ["gluten", "dairy", "eggs"], restrictions: ["high-sugar"] },
-    { id: 14, name: "Tiramisu", description: "Classic Italian dessert with coffee and mascarpone", price: 9.99, category: "desserts", emoji: "☕", tags: ["vegetarian"], allergens: ["gluten", "dairy", "eggs"], restrictions: ["high-sugar", "caffeine"] },
-    
-    // Drinks
-    { id: 15, name: "Fresh Orange Juice", description: "Freshly squeezed orange juice", price: 4.99, category: "drinks", emoji: "🍹", tags: ["vegetarian", "vegan"], allergens: [], restrictions: ["high-sugar"] },
-    { id: 16, name: "Iced Coffee", description: "Cold brew coffee with ice and cream", price: 5.99, category: "drinks", emoji: "🧊", tags: ["vegetarian"], allergens: ["dairy"], restrictions: ["caffeine"] },
-    { id: 17, name: "Lemonade", description: "Fresh lemonade with mint leaves", price: 4.99, category: "drinks", emoji: "🍋", tags: ["vegetarian", "vegan"], allergens: [], restrictions: ["high-sugar"] },
-    { id: 18, name: "Soda", description: "Assorted soft drinks", price: 3.99, category: "drinks", emoji: "🥤", tags: ["vegetarian", "vegan"], allergens: [], restrictions: ["high-sugar"] }
-];
+// Menu data - loaded from MongoDB via API
+let menuItems = [];
 
 // Cart state
 let cart = [];
 let currentCategory = 'all';
 
+// API Configuration - Auto-detect environment
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' ||
+                    window.location.hostname === '';
+
+// Make isLocalhost globally accessible to avoid duplicate declarations
+window.isLocalhost = isLocalhost;
+
+const API_BASE_URL = isLocalhost 
+    ? 'http://localhost:5000'  // Local development
+    : 'https://web-production-f1d28.up.railway.app';  // Production (GitHub Pages)
+
 // Initialize the page
-document.addEventListener('DOMContentLoaded', () => {
-    renderMenu();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadMenuFromAPI();
     setupEventListeners();
 });
+
+// Load menu from MongoDB via API
+async function loadMenuFromAPI() {
+    try {
+        // Add cache-busting and no-cache headers to always get fresh data
+        const response = await fetch(`${API_BASE_URL}/api/menu`, {
+            method: 'GET',
+            cache: 'no-store' // Don't use cache (browser will handle this)
+            // Removed custom headers to avoid CORS preflight issues
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.dishes) {
+            menuItems = data.dishes;
+            console.log(`✅ Loaded ${menuItems.length} dishes from database`);
+            
+            // Make menuItems globally accessible for recommendation.js
+            window.menuItems = menuItems;
+            
+            // Dispatch event to notify that menu is loaded
+            window.dispatchEvent(new CustomEvent('menuLoaded', { detail: menuItems }));
+            
+            renderMenu();
+        } else {
+            throw new Error('Invalid response format');
+        }
+    } catch (error) {
+        console.error('❌ Error loading menu from API:', error);
+        console.error('❌ Full error details:', error);
+        console.log('⚠️ Falling back to empty menu. Please check:');
+        console.log('   1. Backend server is running on http://localhost:5000');
+        console.log('   2. MongoDB is connected');
+        console.log('   3. Database has been seeded with dishes');
+        console.log('   4. API URL:', `${API_BASE_URL}/api/menu`);
+        
+        // Set empty array for menuItems
+        menuItems = [];
+        window.menuItems = [];
+        
+        // Show error message to user with more details
+        const menuGrid = document.getElementById('menuGrid');
+        if (menuGrid) {
+            menuGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
+                    <h3>⚠️ Unable to load menu</h3>
+                    <p>Please check that the server is running and MongoDB is connected.</p>
+                    <p style="color: #666; font-size: 0.9rem;">Error: ${error.message}</p>
+                    <p style="color: #666; font-size: 0.9rem;">API URL: ${API_BASE_URL}/api/menu</p>
+                    <button onclick="refreshMenu()" style="margin-top: 10px; padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🔄 Try Again
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
 
 // Render menu items
 function renderMenu() {
@@ -251,8 +298,23 @@ function confirmOrder() {
     closeModal();
 }
 
+// Function to manually refresh menu from database
+async function refreshMenu() {
+    console.log('🔄 Refreshing menu from database...');
+    const menuGrid = document.getElementById('menuGrid');
+    if (menuGrid) {
+        menuGrid.innerHTML = '<div style="text-align: center; padding: 2rem;">🔄 Refreshing menu...</div>';
+    }
+    await loadMenuFromAPI();
+    // Show success message briefly
+    setTimeout(() => {
+        console.log('✅ Menu refreshed successfully!');
+    }, 500);
+}
+
 // Make functions globally accessible for onclick handlers
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;
 window.updateQuantity = updateQuantity;
+window.refreshMenu = refreshMenu;
 
