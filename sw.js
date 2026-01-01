@@ -1,7 +1,7 @@
 // Service Worker for Restaurant Ordering App
 // Enables offline functionality and caching
 
-const CACHE_NAME = 'restaurant-app-v1';
+const CACHE_NAME = 'restaurant-app-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -40,9 +40,13 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
+    }).then(() => {
+      // Force update all clients
+      return self.clients.claim();
     })
   );
-  return self.clients.claim();
+  // Force skip waiting to activate immediately
+  self.skipWaiting();
 });
 
 // Fetch event - serve from cache, fallback to network
