@@ -51,6 +51,9 @@
             <div class="special-needs-selector">
                 <span>Do you have any special dietary needs or allergies?</span>
                 <button class="special-needs-btn" id="specialNeedsBtn">Yes, I have special needs</button>
+                <button class="refresh-menu-btn" onclick="refreshMenu()" title="Refresh menu from database">
+                    <span class="refresh-icon">🔄</span> Refresh Menu
+                </button>
             </div>
         </div>
     </header>
@@ -64,6 +67,7 @@
                 <button class="tab-btn" data-category="mains">Main Courses</button>
                 <button class="tab-btn" data-category="desserts">Desserts</button>
                 <button class="tab-btn" data-category="drinks">Drinks</button>
+                <button class="tab-btn refresh-btn" onclick="refreshMenu()" title="Refresh menu from database"><span class="refresh-icon">🔄</span> Refresh</button>
             </div>
             
             <div class="menu-grid" id="menuGrid">
