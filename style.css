@@ -129,6 +129,32 @@ main {
     color: white;
 }
 
+.tab-btn.refresh-btn {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tab-btn.refresh-btn:hover {
+    background: #218838;
+    border-color: #218838;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+.tab-btn.refresh-btn .refresh-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.tab-btn.refresh-btn:hover .refresh-icon {
+    transform: rotate(180deg);
+}
+
 .menu-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -523,6 +549,36 @@ main {
     background: #5568d3;
     transform: translateY(-2px);
     box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.refresh-menu-btn {
+    padding: 10px 20px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+}
+
+.refresh-menu-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+.refresh-menu-btn .refresh-icon {
+    font-size: 1.1em;
+    transition: transform 0.3s ease;
+}
+
+.refresh-menu-btn:hover .refresh-icon {
+    transform: rotate(180deg);
 }
 
 /* Chatbot Modal Styles */
