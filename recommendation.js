@@ -2,13 +2,25 @@
 // ============================================
 
 // Configuration
+// Auto-detect environment: use localhost for local development, Railway for production
+// Use window.isLocalhost if already defined (from script.js), otherwise calculate it
+// Don't redeclare - just use the value to avoid duplicate declaration error
+const isLocalhostValue = typeof window.isLocalhost !== 'undefined' 
+    ? window.isLocalhost 
+    : (window.location.hostname === 'localhost' || 
+       window.location.hostname === '127.0.0.1' ||
+       window.location.hostname === '');
+
 const AI_CONFIG = {
     // Qwen3 API Configuration (Alibaba Cloud DashScope)
     // Using proxy server to avoid CORS issues
     qwen: {
         apiKey: 'sk-ca0f66aeb99342bf9873e58007f0e829', // Get from https://dashscope.console.aliyun.com/
         model: 'qwen-turbo', // Options: 'qwen-turbo', 'qwen-plus', 'qwen-max', 'qwen2.5-72b-instruct'
-        endpoint: 'https://web-production-f1d28.up.railway.app/api/qwen'
+        // Automatically switches between localhost (for local testing) and Railway (for production)
+        endpoint: isLocalhostValue 
+            ? 'http://localhost:5000/api/qwen'  // Local development
+            : 'https://web-production-f1d28.up.railway.app/api/qwen'  // Production (GitHub Pages)
     },
     
     // Weather API Configuration (optional - for weather-based recommendations)
@@ -193,11 +205,23 @@ function stopListening() {
 }
 
 // Initialize chatbot
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Display date/time immediately (don't wait for async operations)
+    updateContextDisplay();
+    
     setupChatbot();
     initVoiceRecognition(); // Initialize voice recognition
-    updateContextData(); // Get current date, time, and weather
-    updateContextDisplay(); // Display date and weather on homepage
+    
+    // Update context data in background (weather, special dates, etc.)
+    updateContextData().then(() => {
+        // Update display again after data is loaded
+        updateContextDisplay();
+    }).catch(error => {
+        console.error('Error loading context data:', error);
+        // Still show date/time even if weather fails
+        updateContextDisplay();
+    });
+    
     // Update time every minute
     setInterval(updateContextDisplay, 60000);
 });
@@ -374,8 +398,23 @@ async function sendMessage() {
 
 // Update context data (date, time, weather, special dates)
 async function updateContextData() {
-    // Get local date and time
-    const now = new Date();
+    try {
+        // Initialize contextData if not already initialized
+        if (!contextData) {
+            contextData = {
+                date: '',
+                time: '',
+                weather: null,
+                temperature: null,
+                specialDates: [],
+                season: '',
+                dayOfWeek: '',
+                month: ''
+            };
+        }
+        
+        // Get local date and time
+        const now = new Date();
     contextData.date = now.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
@@ -409,10 +448,29 @@ async function updateContextData() {
         }
     }
     
-    console.log('Context data updated:', contextData);
-    
-    // Update display on homepage
-    updateContextDisplay();
+        console.log('Context data updated:', contextData);
+        
+        // Update display on homepage
+        updateContextDisplay();
+    } catch (error) {
+        console.error('Error updating context data:', error);
+        // Still try to display basic date/time even if something fails
+        const now = new Date();
+        if (!contextData) {
+            contextData = {};
+        }
+        contextData.date = now.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        contextData.time = now.toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: true 
+        });
+        updateContextDisplay();
+    }
 }
 
 // Check for special dates (holidays, events, etc.)
@@ -487,10 +545,11 @@ async function getQwenResponse(userMessage) {
         throw new Error('Qwen API key not configured');
     }
 
-    // Get menu items for AI context
-    const menuContext = typeof menuItems !== 'undefined' ? menuItems.map(item => 
+    // Get menu items for AI context (check both local and window scope)
+    const items = typeof menuItems !== 'undefined' ? menuItems : (window.menuItems || []);
+    const menuContext = items.length > 0 ? items.map(item => 
         `ID:${item.id} "${item.name}" (${item.category}) - Tags:${item.tags?.join(',') || 'none'} Allergens:${item.allergens?.join(',') || 'none'} Restrictions:${item.restrictions?.join(',') || 'none'}`
-    ).join('\n') : 'Menu not available';
+    ).join('\n') : 'Menu is loading from database. Please wait a moment.';
     
     // Build context information string
     let contextInfo = `CURRENT CONTEXT:
@@ -783,10 +842,13 @@ function updateApplyButtonState() {
 function generateRecommendations() {
     recommendedItems = [];
     
-    // Ensure menuItems is accessible (from script.js)
-    if (typeof menuItems === 'undefined') {
-        console.error('menuItems not found. Make sure script.js is loaded before recommendation.js');
-        addMessageToChat('Error: Menu data not available. Please refresh the page.', 'bot');
+    // Ensure menuItems is accessible (from script.js, loaded from MongoDB)
+    // Check both local scope and window scope
+    const items = typeof menuItems !== 'undefined' ? menuItems : (window.menuItems || []);
+    
+    if (!items || items.length === 0) {
+        console.warn('menuItems not loaded yet. Waiting for menu to load from database...');
+        // Don't show error, just wait - menu is loading asynchronously
         return;
     }
     
@@ -806,7 +868,7 @@ function generateRecommendations() {
     }
     
     // Filter menu items based on user needs
-    const suitableItems = menuItems.filter(item => {
+    const suitableItems = items.filter(item => {
         // Step 1: Check allergens - EXCLUDE items with user's allergens
         for (const allergen of userNeeds.allergies) {
             if (item.allergens && item.allergens.includes(allergen)) {
@@ -972,8 +1034,18 @@ function updateContextDisplay() {
     const weatherText = document.getElementById('weatherText');
     
     // Update date
-    if (dateDisplay && contextData.date) {
-        dateDisplay.textContent = contextData.date;
+    if (dateDisplay) {
+        if (contextData && contextData.date) {
+            dateDisplay.textContent = contextData.date;
+        } else {
+            // Fallback: show current date if contextData not ready
+            const now = new Date();
+            dateDisplay.textContent = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
     }
     
     // Update time (refresh every call)
@@ -988,7 +1060,7 @@ function updateContextDisplay() {
     
     // Update weather if available
     if (weatherDisplay && weatherText) {
-        if (contextData.weather && contextData.temperature !== null) {
+        if (contextData && contextData.weather && contextData.temperature !== null) {
             const weatherEmoji = getWeatherEmoji(contextData.weather);
             weatherText.textContent = `${weatherEmoji} ${contextData.weather} ${contextData.temperature}°C`;
             weatherDisplay.style.display = 'flex';
@@ -1017,5 +1089,4 @@ window.recommendationSystem = {
     clearChat: clearChat,
     getContextData: () => contextData
 };
-
 
