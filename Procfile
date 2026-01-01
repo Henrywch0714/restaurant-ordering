@@ -1,2 +1,2 @@
-web: python proxy_server.py
+web: python menu_server.py
 
