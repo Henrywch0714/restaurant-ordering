@@ -1,0 +1,2652 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: 
+        /* Real wood texture image - prioritize PNG */
+        url('wood-texture.png'),
+        url('wood-texture.jpg'),
+        /* Wood grain texture overlay */
+        repeating-linear-gradient(
+            0deg,
+            rgba(101, 67, 33, 0.03) 0px,
+            rgba(139, 69, 19, 0.03) 2px,
+            rgba(101, 67, 33, 0.03) 4px
+        ),
+        /* Wood knots and patterns */
+        radial-gradient(ellipse at 30% 40%, rgba(60, 35, 20, 0.08) 0%, transparent 20%),
+        radial-gradient(ellipse at 70% 60%, rgba(80, 50, 30, 0.06) 0%, transparent 15%),
+        /* Warm wood base color */
+        linear-gradient(135deg, 
+            #7a5d3e 0%, 
+            #6b4e2f 25%, 
+            #5a3d20 50%, 
+            #6b4e2f 75%, 
+            #7a5d3e 100%
+        );
+    background-size: 
+        1600px 1200px,
+        1600px 1200px,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+    background-attachment: fixed;
+    background-blend-mode: multiply, multiply, normal, normal, normal, normal;
+    min-height: 100vh;
+    color: #333;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Enable scrolling on small screens - but only on main body, not nested */
+@media (max-width: 1024px) {
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+    }
+    
+    html {
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+    }
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(139, 69, 19, 0.03) 2px,
+            rgba(139, 69, 19, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(160, 82, 45, 0.03) 2px,
+            rgba(160, 82, 45, 0.03) 4px
+        );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Header - Hidden, only language switcher shown */
+.book-header {
+    display: none;
+}
+
+/* Fixed Language Switcher */
+.language-switcher-fixed {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.language-switcher {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.lang-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.language-switcher-fixed .lang-btn {
+    color: #654321;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.lang-btn.active,
+.lang-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+}
+
+.header-content h1 {
+    font-size: 2em;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.subtitle {
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+.back-btn {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border: 2px solid white;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.back-btn:hover {
+    background: white;
+    color: #8b4513;
+}
+
+/* Main Container - Book and TOC centered */
+.book-container {
+    display: flex;
+    max-width: 1400px;
+    margin: 80px auto 100px auto;
+    padding: 0 40px;
+    gap: 0;
+    height: calc(100vh - 280px);
+    position: relative;
+    z-index: 1;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: visible; /* No scrollbar needed - page turning uses touch/click events */
+}
+
+/* Fixed Chat Controls (Microphone and Message Button) - Centered on big screens */
+.fixed-chat-controls {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 180px; /* Below header */
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    z-index: 200;
+    align-items: center;
+}
+
+/* Fixed Microphone Button - Glass effect */
+.mic-btn-fixed {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.mic-btn-fixed:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.mic-btn-fixed:active {
+    transform: scale(0.95);
+}
+
+.mic-btn-fixed.listening {
+    animation: micPulse 1.5s ease-in-out infinite;
+    background: rgba(245, 87, 108, 0.3);
+    border-color: rgba(245, 87, 108, 0.5);
+}
+
+@keyframes micPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+    }
+    50% {
+        transform: scale(1.15);
+        box-shadow: 0 6px 25px rgba(245, 87, 108, 0.6);
+    }
+}
+
+.mic-icon-fixed {
+    font-size: 1.8em;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Fixed Message Button - Glass effect (same size as microphone) */
+.message-btn-fixed {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.message-btn-fixed:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.message-icon-fixed {
+    font-size: 1.8em;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Text Input Overlay - Glass effect */
+.text-input-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.text-input-panel {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 20px 25px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    min-width: 400px;
+    max-width: 600px;
+}
+
+.text-input-fixed {
+    flex: 1;
+    padding: 12px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    font-size: 1em;
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #333;
+    font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.text-input-fixed:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.text-input-fixed::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.send-btn-fixed {
+    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.send-btn-fixed:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Conversation Cloud Overlay - Glass effect */
+.conversation-cloud-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.conversation-cloud-panel {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    padding: 25px 30px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    min-width: 400px;
+    max-width: 700px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.conversation-cloud-content {
+    font-size: 1.05em;
+    line-height: 1.6;
+    word-wrap: break-word;
+    color: #333;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.conversation-cloud-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mic-btn-cloud {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.mic-btn-cloud:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.mic-btn-cloud.listening {
+    animation: micPulse 1.5s ease-in-out infinite;
+    background: rgba(245, 87, 108, 0.3);
+    border-color: rgba(245, 87, 108, 0.5);
+}
+
+.mic-icon-cloud {
+    font-size: 1.8em;
+}
+
+.message-btn-cloud {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.message-btn-cloud:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.message-icon-cloud {
+    font-size: 1.5em;
+}
+
+/* Chat Cloud (Single Talking Cloud) - Positioned outside top right of waiter - Glass effect */
+.chat-cloud-book {
+    position: absolute;
+    top: 10px;
+    right: -220px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    max-width: 200px;
+    min-width: 150px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: bubbleAppear 0.3s ease-out;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-cloud-book::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 20px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 12px solid rgba(255, 255, 255, 0.15);
+    filter: blur(2px);
+}
+
+
+.chat-cloud-content {
+    font-size: 0.95em;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+@keyframes bubbleAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Big Microphone Button */
+.mic-btn-book {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.mic-btn-book:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.mic-btn-book:active {
+    transform: scale(0.95);
+}
+
+.mic-btn-book.listening {
+    animation: pulse 1.5s ease-in-out infinite;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.mic-icon-book {
+    font-size: 2.5em;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 6px 25px rgba(245, 87, 108, 0.6);
+    }
+}
+
+/* Small Text Input - Glass effect */
+.text-input-wrapper-book {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    align-items: center;
+}
+
+.text-input-book {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    font-size: 0.9em;
+    outline: none;
+    transition: all 0.3s ease;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.text-input-book:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.text-input-book::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.send-btn-book {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.send-btn-book:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.send-btn-book:active {
+    transform: scale(0.95);
+}
+
+.send-btn-book:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.send-btn-book:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+
+/* Voice Status - Hidden */
+.voice-status-book {
+    display: none !important;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 20px;
+    font-size: 0.85em;
+    color: #667eea;
+}
+
+.voice-indicator-book {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #f5576c;
+    animation: blink 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* Table of Contents - Glass-like scrolling directory attached to book (hidden on cover) */
+.table-of-contents {
+    width: 140px; /* slim directory strip */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    /* Glass-like, subtle so it merges with book */
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 14px 0 0 14px; /* rounded only on outer side */
+    padding: 18px 10px;
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    /* Fix top to match book top, but cut some height at bottom */
+    height: calc(100% - 80px);   /* same top as book, shorter bottom */
+    align-self: stretch;         /* follow overall book column height */
+    position: relative;          /* fixed within the book column, not sticky */
+    top: 0;
+    max-height: none;
+    overflow: visible;            /* No nested scrollbar - use main page scroll */
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-right: none; /* let book edge define the joint */
+    border-left: none;
+    margin-right: -50px; /* overlap more onto the book to eliminate any visible gap */
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-of-contents h2 {
+    font-size: 1.4em;
+    color: #654321;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px double #8b4513;
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    font-style: italic;
+    letter-spacing: 0.5px;
+}
+
+.toc-nav ul {
+    list-style: none;
+}
+
+.toc-nav {
+    flex: 1;
+    overflow-y: visible; /* No nested scrollbar - use main page scroll */
+    padding-right: 4px;
+}
+
+.toc-nav li {
+    margin-bottom: 6px;
+}
+
+.toc-nav a {
+    display: block;
+    padding: 10px 12px;
+    color: #654321;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.9em;
+    border-left: 3px solid transparent;
+    background: rgba(255, 255, 255, 0.3);
+    margin-bottom: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.toc-nav a:hover {
+    background: rgba(245, 245, 220, 0.6);
+    border-left-color: #8b4513;
+    transform: translateX(5px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.toc-nav a.active {
+    background: linear-gradient(to right, #8b4513, #654321);
+    color: white;
+    border-left-color: #4a2c1a;
+    box-shadow: 0 2px 8px rgba(101, 67, 33, 0.4);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Green bubble for recommended count in TOC - with light/shine effect */
+.toc-recommended-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #4caf50 0%, #28a745 100%);
+    color: white;
+    border-radius: 12px;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    text-align: center;
+    font-size: 0.7em;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+    box-shadow: 
+        0 2px 6px rgba(40, 167, 69, 0.4),
+        0 0 8px rgba(76, 175, 80, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    position: relative;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    animation: bubbleGlow 2s ease-in-out infinite;
+}
+
+/* Light/shine effect on the bubble */
+.toc-recommended-count::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    width: 6px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+/* Subtle glow animation */
+@keyframes bubbleGlow {
+    0%, 100% {
+        box-shadow: 
+            0 2px 6px rgba(40, 167, 69, 0.4),
+            0 0 8px rgba(76, 175, 80, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    50% {
+        box-shadow: 
+            0 2px 8px rgba(40, 167, 69, 0.5),
+            0 0 12px rgba(76, 175, 80, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+}
+
+/* Show table of contents when not on cover page */
+.book-container:not(.on-cover) .table-of-contents {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Book Wrapper - Floating book on right side */
+.book-wrapper {
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+    position: relative;
+    max-width: 900px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin-right: 0; /* stick TOC + book flush without extra right gap */
+}
+
+/* Book Pages Container - Realistic leather-bound book floating on desk */
+.book-pages {
+    perspective: 2000px;
+    perspective-origin: center 40%;
+    transform-style: preserve-3d;
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+    transform: rotateX(3deg) rotateY(-2deg);
+    background: 
+        /* Real leather texture for binding - prioritize PNG */
+        url('leather-texture.png'),
+        url('leather-texture.jpg'),
+        /* Left binding shadow */
+        linear-gradient(to right, rgba(30, 18, 12, 0.6) 0%, rgba(40, 25, 15, 0.4) 50px, transparent 90px),
+        /* Right binding shadow */
+        linear-gradient(to left, rgba(30, 18, 12, 0.6) 0%, rgba(40, 25, 15, 0.4) 50px, transparent 90px),
+        /* Center leather binding */
+        linear-gradient(to right, 
+            transparent 0%,
+            #3a2415 48.5%,
+            #2d1a0f 49.5%,
+            #2d1a0f 50.5%,
+            #3a2415 51.5%,
+            transparent 100%
+        );
+    background-size: 
+        600px 800px,
+        600px 800px,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+    background-blend-mode: multiply, multiply, normal, normal, normal;
+    padding: 30px 0; /* slightly reduce internal horizontal margin so content is closer to the left edge */
+    border-radius: 0;
+    height: 100%;
+    max-height: 650px;
+    box-shadow: 
+        0 25px 80px rgba(0, 0, 0, 0.6),
+        0 10px 30px rgba(0, 0, 0, 0.4),
+        inset 0 0 100px rgba(40, 25, 15, 0.3),
+        inset -20px 0 40px rgba(0, 0, 0, 0.4),
+        inset 20px 0 40px rgba(0, 0, 0, 0.4);
+    overflow: visible; /* No scrollbar needed - page turning uses touch/click events */
+}
+
+/* Page - Realistic aged, rough parchment paper */
+.book-page {
+    background: 
+        /* Real paper texture - make it prominent and rough */
+        url('paper-texture.png'),
+        url('paper-texture.jpg'),
+        /* Additional rough texture overlay for more tactile feel */
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(180, 160, 140, 0.03) 2px,
+            rgba(180, 160, 140, 0.03) 3px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 3px,
+            rgba(160, 140, 120, 0.02) 3px,
+            rgba(160, 140, 120, 0.02) 4px
+        ),
+        /* Aged spots and discoloration - more prominent */
+        radial-gradient(circle at 12% 20%, rgba(200, 175, 150, 0.25) 0%, transparent 12%),
+        radial-gradient(circle at 88% 30%, rgba(190, 170, 145, 0.2) 0%, transparent 10%),
+        radial-gradient(circle at 25% 70%, rgba(210, 185, 160, 0.18) 0%, transparent 11%),
+        radial-gradient(circle at 75% 80%, rgba(195, 175, 150, 0.22) 0%, transparent 9%),
+        radial-gradient(circle at 50% 50%, rgba(220, 200, 175, 0.12) 0%, transparent 18%),
+        /* Gentle aged yellowing and warmth */
+        radial-gradient(ellipse at 30% 40%, rgba(240, 220, 190, 0.15) 0%, transparent 25%),
+        radial-gradient(ellipse at 70% 60%, rgba(235, 215, 185, 0.12) 0%, transparent 22%),
+        /* Warm, gentle aged parchment color - softer and more yellowed */
+        linear-gradient(135deg, 
+            #f8f5ef 0%,
+            #f5f1e8 15%,
+            #f2ede2 30%,
+            #efe9dc 45%,
+            #ede6d8 60%,
+            #ebe4d4 75%,
+            #e9e1d0 90%,
+            #e7ded0 100%
+        ),
+        /* Solid opaque background to always cover leather texture */
+        #e7ded0;
+    background-size: 
+        100% 100%,
+        100% 100%,
+        4px 4px,
+        6px 6px,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%;
+    background-repeat: 
+        no-repeat,
+        no-repeat,
+        repeat,
+        repeat,
+        no-repeat,
+        no-repeat,
+        no-repeat,
+        no-repeat,
+        no-repeat,
+        no-repeat,
+        no-repeat,
+        no-repeat,
+        no-repeat;
+    background-blend-mode: 
+        multiply,
+        multiply,
+        overlay,
+        overlay,
+        normal,
+        normal,
+        normal,
+        normal,
+        normal,
+        normal,
+        normal,
+        normal,
+        normal;
+    border-radius: 0;
+    padding: 30px 45px;
+    border: 1px solid rgba(180, 160, 140, 0.3);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* More uneven, rough edges - like old hand-torn paper */
+    clip-path: polygon(
+        0px 1px,
+        2px 0px,
+        calc(100% - 3px) 1px,
+        calc(100% - 1px) 3px,
+        calc(100% - 1px) calc(100% - 2px),
+        calc(100% - 2px) calc(100% - 1px),
+        1px calc(100% - 1px),
+        0px calc(100% - 3px)
+    );
+    /* Add rough edge effect with pseudo-element */
+    filter: contrast(1.05) brightness(0.98);
+    box-shadow: 
+        /* Main page shadow - soft and realistic */
+        0 8px 25px rgba(0, 0, 0, 0.3),
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        /* Inner shadows for depth and age */
+        inset 0 0 50px rgba(200, 180, 150, 0.12),
+        inset 0 0 100px rgba(180, 160, 140, 0.08),
+        /* Binding edge shadow (left) - stronger */
+        inset -25px 0 25px -12px rgba(50, 30, 15, 0.6),
+        /* Right edge subtle shadow */
+        inset 12px 0 15px -8px rgba(0, 0, 0, 0.06),
+        /* Slight top/bottom shadows for rough texture */
+        inset 0 3px 8px -3px rgba(150, 130, 100, 0.15),
+        inset 0 -3px 8px -3px rgba(150, 130, 100, 0.15),
+        /* Ambient shadow from being on table */
+        0 20px 60px rgba(0, 0, 0, 0.35);
+    display: none;
+    height: 100%;
+    max-height: 650px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    border: 1px solid rgba(139, 69, 19, 0.2);
+    backface-visibility: hidden;
+    cursor: pointer;
+    overflow: visible; /* No scrollbar needed - page turning uses touch/click events */
+}
+
+/* Page binding crease removed - no black line in center */
+
+/* Page number area (traditional book style) */
+.book-page::after {
+    content: '';
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 1px;
+    background: rgba(160, 140, 120, 0.25);
+    pointer-events: none;
+    box-shadow: 0 0 2px rgba(180, 160, 140, 0.2);
+}
+
+/* Visual indicators for clickable areas */
+.book-page .click-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.book-page .click-zone-left {
+    left: 0;
+}
+
+.book-page .click-zone-right {
+    right: 0;
+}
+
+.book-page:hover .click-zone {
+    opacity: 0.05;
+}
+
+.book-page.active {
+    display: block;
+    opacity: 1;
+    transform: rotateY(0deg) translateZ(0);
+    z-index: 10;
+    /* No animation when just becoming active - animation already completed */
+}
+
+.book-page.flip-out-left {
+    animation: pageFlipOutLeft 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 11;
+}
+
+.book-page.flip-out-right {
+    animation: pageFlipOutRight 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 11;
+}
+
+.book-page.flip-in-left {
+    animation: pageFlipInLeft 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 12;
+}
+
+.book-page.flip-in-right {
+    animation: pageFlipInRight 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    z-index: 12;
+}
+
+/* Page appears from flat (new page being revealed) */
+@keyframes pageAppear {
+    from {
+        opacity: 0;
+        transform: rotateY(0deg) translateZ(0) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: rotateY(0deg) translateZ(0) scale(1);
+    }
+}
+
+/* Page flips out to the left (turning backward) */
+@keyframes pageFlipOutLeft {
+    0% {
+        opacity: 1;
+        transform: rotateY(0deg) translateZ(0);
+        transform-origin: right center;
+    }
+    50% {
+        opacity: 0.8;
+        transform: rotateY(-90deg) translateZ(-50px) translateX(20px);
+        transform-origin: right center;
+        box-shadow: 
+            -10px 0 30px rgba(0, 0, 0, 0.3),
+            inset -30px 0 30px -20px rgba(101, 67, 33, 0.4);
+    }
+    100% {
+        opacity: 0;
+        transform: rotateY(-180deg) translateZ(-100px) translateX(40px);
+        transform-origin: right center;
+        visibility: hidden;
+    }
+}
+
+/* Page flips out to the right (turning forward) */
+@keyframes pageFlipOutRight {
+    0% {
+        opacity: 1;
+        transform: rotateY(0deg) translateZ(0);
+        transform-origin: left center;
+    }
+    50% {
+        opacity: 0.8;
+        transform: rotateY(90deg) translateZ(-50px) translateX(-20px);
+        transform-origin: left center;
+        box-shadow: 
+            10px 0 30px rgba(0, 0, 0, 0.3),
+            inset 30px 0 30px -20px rgba(101, 67, 33, 0.4);
+    }
+    100% {
+        opacity: 0;
+        transform: rotateY(180deg) translateZ(-100px) translateX(-40px);
+        transform-origin: left center;
+        visibility: hidden;
+    }
+}
+
+/* Page flips in from the left (coming from behind) */
+@keyframes pageFlipInLeft {
+    0% {
+        opacity: 0;
+        transform: rotateY(180deg) translateZ(-100px) translateX(40px);
+        transform-origin: right center;
+        visibility: visible;
+    }
+    50% {
+        opacity: 0.8;
+        transform: rotateY(90deg) translateZ(-50px) translateX(20px);
+        transform-origin: right center;
+        box-shadow: 
+            -10px 0 30px rgba(0, 0, 0, 0.3),
+            inset -30px 0 30px -20px rgba(101, 67, 33, 0.4);
+    }
+    100% {
+        opacity: 1;
+        transform: rotateY(0deg) translateZ(0);
+        transform-origin: right center;
+    }
+}
+
+/* Page flips in from the right (coming from behind) - Curling appearance */
+@keyframes pageFlipInRight {
+    0% {
+        opacity: 0;
+        transform: rotateY(-180deg) translateZ(-100px) translateX(-40px);
+        transform-origin: left center;
+        visibility: visible;
+    }
+    50% {
+        opacity: 0.8;
+        transform: rotateY(-90deg) translateZ(-50px) translateX(-20px);
+        transform-origin: left center;
+        box-shadow: 
+            10px 0 30px rgba(0, 0, 0, 0.3),
+            inset 30px 0 30px -20px rgba(101, 67, 33, 0.4);
+    }
+    100% {
+        opacity: 1;
+        transform: rotateY(0deg) translateZ(0);
+        transform-origin: left center;
+    }
+}
+
+/* Page Header */
+.page-header {
+    border-bottom: 3px double #8b4513;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Decorative corner elements (like old books) */
+.page-header::before,
+.page-header::after {
+    content: '❋';
+    position: absolute;
+    bottom: -10px;
+    color: rgba(139, 69, 19, 0.3);
+    font-size: 1.2em;
+}
+
+.page-header::before {
+    left: 0;
+}
+
+.page-header::after {
+    right: 0;
+}
+
+.page-title {
+    font-size: 2em;
+    color: #8b4513;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+.page-subtitle {
+    color: #666;
+    font-size: 0.95em;
+    font-style: italic;
+}
+
+/* Dishes Grid */
+.dishes-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 5px;
+    flex: 1;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0; /* Prevent grid overflow */
+}
+
+.dish-item {
+    background: 
+        /* Rough paper texture matching page */
+        url('paper-texture.png'),
+        url('paper-texture.jpg'),
+        /* Subtle texture overlay */
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 8px,
+            rgba(200, 180, 160, 0.03) 8px,
+            rgba(200, 180, 160, 0.03) 16px
+        ),
+        /* Gentle aged background */
+        linear-gradient(to bottom, 
+            #faf8f3,
+            #f7f4ed,
+            #f4f1e7
+        );
+    background-size: 
+        400px 400px,
+        400px 400px,
+        16px 16px,
+        100% 100%;
+    background-blend-mode: 
+        soft-light,
+        soft-light,
+        normal,
+        normal;
+    border: 2px solid rgba(180, 160, 140, 0.25);
+    border-radius: 6px;
+    padding: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+    margin: 2px;
+    min-height: 200px;
+    max-height: 220px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 
+        0 2px 5px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 0 20px rgba(200, 180, 150, 0.08);
+    filter: contrast(1.02);
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box; /* Include padding and border in width calculation */
+    flex-shrink: 0;
+    flex-grow: 0; /* Prevent cards from growing */
+}
+
+/* Dish image as blurred background - using CSS variable approach */
+.dish-item-with-image {
+    position: relative;
+}
+
+.dish-item-with-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: var(--dish-image);
+    background-size: cover;
+    background-position: center;
+    filter: blur(1px); /* Very light blur - just a subtle softness */
+    z-index: 0;
+    opacity: 1; /* Fully visible */
+}
+
+.dish-item-with-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(250, 248, 243, 0.2), /* Very light overlay - let image show clearly */
+        rgba(247, 244, 237, 0.25),
+        rgba(244, 241, 231, 0.3)
+    );
+    z-index: 0;
+}
+
+.dish-content {
+    position: relative;
+    z-index: 2; /* Above blurred background */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Ensure text is visible over background - stronger shadows for readability */
+.dish-item-with-image .dish-name,
+.dish-item-with-image .dish-description,
+.dish-item-with-image .dish-price {
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        0 0 10px rgba(255, 255, 255, 0.8),
+        0 1px 2px rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+.dish-item-with-image .dish-name {
+    color: #654321;
+    font-weight: 700;
+    text-shadow: 
+        0 2px 5px rgba(0, 0, 0, 0.6),
+        0 0 12px rgba(255, 255, 255, 0.9),
+        0 1px 3px rgba(255, 255, 255, 1);
+}
+
+.dish-item-with-image .dish-price {
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.6),
+        0 0 10px rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.3); /* Semi-transparent background for price */
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 0 auto;
+}
+
+.dish-item-with-image .dish-add-btn {
+    background: rgba(255, 255, 255, 0.85); /* More opaque button for visibility */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.dish-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+        0 8px 20px rgba(139, 69, 19, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-color: #8b4513;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(139, 69, 19, 0.03) 10px,
+            rgba(139, 69, 19, 0.03) 20px
+        ),
+        linear-gradient(to bottom, #ffffff, #fafafa);
+}
+
+.dish-emoji {
+    display: none; /* Hide emoji, using images as background instead */
+}
+
+.dish-name {
+    font-size: 1.15em;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    color: #8b4513;
+    margin-bottom: 6px;
+    font-weight: bold;
+    text-align: center;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+.dish-description {
+    color: #666;
+    font-size: 0.85em;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    text-align: center;
+    flex: 1;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    max-height: 4.5em; /* Limit height to prevent overflow */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.dish-price {
+    font-size: 1.4em;
+    color: #8b4513;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 8px;
+    border-top: 1px solid #e8e8e8;
+    flex-shrink: 0;
+}
+
+.dish-add-btn {
+    margin-top: 8px;
+    align-self: center;
+    padding: 4px 10px;
+    font-size: 0.85em;
+    font-weight: 600;
+    border-radius: 999px;
+    border: 1px solid rgba(139, 69, 19, 0.4);
+    background: rgba(255, 255, 255, 0.7);
+    color: #8b4513;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dish-add-btn:hover {
+    background: #8b4513;
+    color: white;
+}
+
+.cart-shortcut {
+    margin-top: auto;
+    margin-bottom: 6px;
+    align-self: center;
+    position: relative;
+    z-index: 3;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 999px;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: #fff;
+}
+
+.cart-icon {
+    font-size: 1.1em;
+}
+
+.cart-count-bubble {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #dc3545;
+    color: white;
+    border-radius: 999px;
+    min-width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    font-weight: 700;
+    padding: 0 4px;
+}
+
+.cart-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.cart-modal-content {
+    width: 90%;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.cart-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    border: none;
+    background: transparent;
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+.cart-items {
+    margin-top: 12px;
+    max-height: 240px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(139, 69, 19, 0.08);
+}
+
+.cart-item-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cart-item-emoji {
+    font-size: 1.2em;
+}
+
+.cart-item-name {
+    font-weight: 600;
+    color: #5a3b20;
+}
+
+.cart-item-meta {
+    font-size: 0.85em;
+    color: #6f6f6f;
+}
+
+.cart-remove-btn {
+    border: none;
+    background: transparent;
+    color: #dc3545;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.cart-empty {
+    color: #777;
+    text-align: center;
+}
+
+.cart-total {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+}
+
+.cart-payment {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cart-payment select {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.cart-pay-btn {
+    padding: 10px;
+    border-radius: 10px;
+    border: none;
+    background: #28a745;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Recommendation Badge for Menu Book */
+.recommendation-badge-book {
+    display: inline-block;
+    background: #28a745;
+    color: #ffffff;
+    padding: 2px 6px;
+    border-radius: 999px;
+    font-size: 0.7em;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    white-space: nowrap;
+}
+
+.iddsi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 6px;
+    font-size: 0.7em;
+    font-weight: 600;
+    color: #5a3d20;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(90, 61, 32, 0.25);
+    border-radius: 10px;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+.dish-name {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* Page Footer */
+.page-footer {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid #e8e8e8;
+    text-align: center;
+    color: #999;
+    font-size: 0.75em;
+    flex-shrink: 0;
+}
+
+/* Navigation Controls */
+.book-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 800px;
+    flex-shrink: 0;
+    margin-top: 8px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    background: linear-gradient(to bottom, #8b4513, #654321);
+    color: white;
+    border: 2px solid rgba(101, 67, 33, 0.5);
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 3px 10px rgba(139, 69, 19, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    min-width: 100px;
+    justify-content: center;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #654321, #4a2c1a);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 20px rgba(139, 69, 19, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.nav-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.nav-icon {
+    font-size: 1em;
+}
+
+.page-indicator {
+    font-size: 1em;
+    color: #8b4513;
+    font-weight: bold;
+    min-width: 80px;
+    text-align: center;
+}
+
+.separator {
+    margin: 0 10px;
+    color: #999;
+}
+
+/* Welcome Window - Glass effect */
+.welcome-window {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    opacity: 1;
+    transition: opacity 0.8s ease-out;
+}
+
+.welcome-window.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.welcome-window-content {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    padding: 35px 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    max-width: 400px;
+    width: 90%;
+    animation: welcomeAppear 0.5s ease-out;
+}
+
+@keyframes welcomeAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.welcome-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.welcome-logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-restaurant-name {
+    margin: 0;
+    color: #654321;
+    font-size: 1.3em;
+    font-weight: 700;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.5px;
+}
+
+.welcome-waiter-image {
+    width: 100%;
+    max-width: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.welcome-waiter-img {
+    width: 100%;
+    height: auto;
+    max-height: 250px;
+    object-fit: contain;
+    border-radius: 15px;
+    filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.3));
+}
+
+.welcome-message {
+    text-align: center;
+    color: #8b4513;
+    font-size: 1.5em;
+    line-height: 1.6;
+    font-weight: 800;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 2px solid rgba(139, 69, 19, 0.4);
+    box-shadow: 
+        0 4px 15px rgba(139, 69, 19, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    animation: textPulse 2s ease-in-out infinite;
+}
+
+.welcome-message p {
+    margin: 0;
+    text-shadow: 
+        2px 2px 4px rgba(0, 0, 0, 0.3),
+        0 0 8px rgba(255, 255, 255, 0.5);
+    letter-spacing: 0.8px;
+    color: #654321;
+    font-style: italic;
+}
+
+@keyframes textPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 
+            0 4px 15px rgba(139, 69, 19, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 
+            0 6px 20px rgba(139, 69, 19, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+}
+
+.welcome-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.welcome-mic-btn,
+.welcome-message-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    cursor: default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.welcome-mic-icon,
+.welcome-message-icon {
+    font-size: 1.8em;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@media (max-width: 768px) {
+    .welcome-window-content {
+        padding: 30px 25px;
+        max-width: 350px;
+        gap: 20px;
+    }
+    
+    .welcome-waiter-image {
+        max-width: 150px;
+    }
+    
+    .welcome-waiter-img {
+        max-height: 180px;
+    }
+    
+    .welcome-message {
+        font-size: 1em;
+    }
+    
+    .welcome-mic-btn,
+    .welcome-message-btn {
+        width: 55px;
+        height: 55px;
+    }
+    
+    .welcome-mic-icon,
+    .welcome-message-icon {
+        font-size: 1.6em;
+    }
+}
+
+/* Nutrition Popup - Glass effect */
+.nutrition-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.nutrition-popup-content {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 0;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.nutrition-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nutrition-popup-header h3 {
+    margin: 0;
+    color: #654321;
+    font-size: 1.5em;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.nutrition-popup-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #654321;
+    font-size: 1.2em;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.nutrition-popup-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.nutrition-popup-body {
+    padding: 25px;
+}
+
+.nutrition-section {
+    margin-bottom: 25px;
+}
+
+.nutrition-section:last-child {
+    margin-bottom: 0;
+}
+
+.nutrition-section h4 {
+    margin: 0 0 15px 0;
+    color: #8b4513;
+    font-size: 1.2em;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.nutrition-iddsi {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(139, 69, 19, 0.2);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+.nutrition-iddsi .nutrition-label {
+    font-weight: 600;
+    color: #654321;
+}
+
+.nutrition-iddsi .iddsi-value {
+    background: rgba(139, 69, 19, 0.4);
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 1.1em;
+    color: #654321;
+}
+
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.nutrition-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nutrition-label {
+    font-weight: 500;
+    color: #654321;
+    font-size: 0.95em;
+}
+
+.nutrition-value {
+    font-weight: 600;
+    color: #8b4513;
+    font-size: 1em;
+}
+
+.nutrition-ingredients {
+    margin: 0;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #654321;
+    line-height: 1.6;
+    font-size: 0.95em;
+}
+
+@media (max-width: 768px) {
+    .nutrition-popup-content {
+        max-width: 90%;
+        max-height: 85vh;
+    }
+    
+    .nutrition-popup-header {
+        padding: 15px 20px;
+    }
+    
+    .nutrition-popup-header h3 {
+        font-size: 1.3em;
+    }
+    
+    .nutrition-popup-body {
+        padding: 20px;
+    }
+    
+    .nutrition-section {
+        margin-bottom: 20px;
+    }
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    color: white;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Touch Swipe Indicators */
+.swipe-hint {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(139, 69, 19, 0.9);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 30px;
+    font-size: 0.9em;
+    display: none;
+    z-index: 1000;
+    animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+}
+
+/* Responsive Design */
+/* Responsive: Left Panel */
+@media (max-width: 1200px) {
+    .left-side-panel {
+        max-width: 250px;
+    }
+    
+    .water-image {
+        max-height: 250px;
+    }
+    
+    .chatbot-section-book {
+        max-width: 240px;
+        padding: 15px;
+    }
+    
+    .mic-btn-book {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .mic-icon-book {
+        font-size: 2em;
+    }
+}
+
+@media (max-width: 1024px) {
+    .fixed-chat-controls {
+        left: 50%;
+        transform: translateX(-50%);
+        top: 180px;
+    }
+    
+    .left-side-panel {
+        position: relative;
+        left: auto;
+        top: auto;
+        transform: none;
+        max-width: 100%;
+        width: 100%;
+        margin: 20px auto;
+        padding: 0 20px;
+        align-items: center;
+        order: -1; /* Show before book content on small screens */
+    }
+    
+    .book-container {
+        flex-direction: column;
+        align-items: center;
+        padding: 0 20px;
+        justify-content: flex-start;
+        height: auto;
+        min-height: auto;
+        overflow: visible;
+        margin: 20px 0;
+        padding-bottom: 40px; /* Add bottom padding for scrolling */
+    }
+    
+    .book-wrapper {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        height: auto;
+        overflow: visible;
+    }
+    
+    .book-pages {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: 500px;
+        overflow: visible;
+        transform: none;
+        padding: 20px 0;
+        position: relative;
+    }
+    
+    /* Keep page-turning behavior on small screens, just adjust sizing */
+    .book-pages .book-page {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: 500px;
+        max-height: none;
+    }
+    
+    .water-image-container {
+        max-width: 200px;
+    }
+    
+    .chatbot-section-book {
+        max-width: 100%;
+        width: 100%;
+        background: transparent;
+    }
+    
+    .chat-cloud-book {
+        max-width: 180px;
+        min-width: 120px;
+        right: -200px;
+        top: 5px;
+    }
+    
+    .table-of-contents {
+        width: 100%;
+        position: relative;
+        top: 0;
+        max-height: none;
+        opacity: 1;
+        pointer-events: auto;
+        margin-bottom: 20px;
+    }
+    
+    .toc-nav ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .toc-nav li {
+        margin-bottom: 0;
+    }
+    
+    .toc-nav a {
+        padding: 10px 20px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .toc-nav a:hover {
+        transform: translateY(-3px);
+    }
+    
+    .toc-nav a.active {
+        border-left: none;
+        border-bottom-color: white;
+    }
+}
+
+@media (max-width: 768px) {
+    .fixed-chat-controls {
+        left: auto;
+        right: 20px;
+        bottom: 20px;
+        top: auto;
+        transform: none;
+        flex-direction: column;
+        z-index: 201;
+    }
+    
+    .mic-btn-fixed,
+    .message-btn-fixed {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .mic-icon-fixed,
+    .message-icon-fixed {
+        font-size: 2em;
+    }
+    
+    .text-input-panel {
+        min-width: 90%;
+        max-width: 90%;
+        padding: 15px 20px;
+    }
+    
+    .conversation-cloud-panel {
+        min-width: 90%;
+        max-width: 90%;
+        padding: 20px 25px;
+    }
+    
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain; /* Prevent pull-to-refresh on iOS */
+        touch-action: pan-y; /* Enable smooth vertical scrolling on iOS */
+    }
+    
+    html {
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+        touch-action: pan-y;
+    }
+    
+    .book-container {
+        overflow: visible !important; /* No scrollbar needed - page turning uses touch events */
+        touch-action: pan-y; /* Allow vertical scroll, page turning handled by JS */
+        padding-bottom: 50px;
+    }
+    
+    .book-pages {
+        overflow: visible !important; /* No scrollbar needed */
+        touch-action: pan-y;
+    }
+    
+    .book-page {
+        overflow: visible !important; /* No scrollbar needed */
+        touch-action: pan-y;
+    }
+    
+    .book-wrapper {
+        height: auto;
+        overflow: visible !important; /* No scrollbar needed */
+    }
+    
+    .book-pages {
+        height: auto;
+        min-height: 500px;
+        overflow: visible;
+        transform: none;
+    }
+    
+    /* Keep page-turning behavior, just adjust sizing */
+    .book-pages .book-page {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: 500px;
+        max-height: none;
+        padding: 20px;
+    }
+    
+    .book-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-content h1 {
+        font-size: 1.5em;
+    }
+    
+    .dishes-grid {
+        grid-template-columns: 1fr !important; /* Single column for 3 dishes on mobile */
+        gap: 30px !important; /* Wider gap on mobile for easier page turning - gaps count as page turning area */
+        padding: 10px 0 !important; /* Add padding to create more page turning area */
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important;
+        overflow: visible !important;
+    }
+    
+    /* Ensure grid items don't overflow */
+    .dishes-grid > * {
+        min-width: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* Fix dish item sizing on mobile - prevent different sizes and overlaps */
+    .dish-item {
+        margin: 0 auto !important; /* Center cards, no margin */
+        width: 100% !important; /* Force full width */
+        max-width: 100% !important; /* Prevent overflow */
+        min-height: 180px !important; /* Fixed minimum height */
+        max-height: 200px !important; /* Fixed maximum height */
+        height: auto !important;
+        box-sizing: border-box !important;
+        flex-shrink: 0 !important; /* Prevent shrinking */
+        flex-grow: 0 !important; /* Prevent growing */
+        position: relative !important; /* Ensure proper positioning */
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    
+    /* Ensure content doesn't cause overflow */
+    .dish-item .dish-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0; /* Allow flex shrinking */
+        overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    .dish-item .dish-description {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        max-height: 3em;
+    }
+    
+    /* Ensure page container doesn't cause overflow */
+    .book-page {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 15px !important;
+        overflow: visible !important;
+    }
+    
+    .dish-item {
+        margin: 0 !important; /* Remove margin, let gap handle spacing for page turning */
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important; /* Prevent flex/grid overflow */
+        min-height: 180px !important; /* Fixed minimum height for consistency */
+        max-height: 200px !important; /* Fixed maximum height for consistency */
+        height: auto;
+        box-sizing: border-box !important; /* Include padding in width calculation */
+        flex-shrink: 0 !important; /* Prevent cards from shrinking */
+        position: relative !important;
+    }
+    
+    .dish-content {
+        width: 100% !important;
+        min-width: 0 !important; /* Prevent content overflow */
+        max-width: 100% !important;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    
+    /* Ensure grid items don't overflow */
+    .dishes-grid > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+    
+    .page-title {
+        font-size: 2em;
+    }
+    
+    .nav-btn {
+        padding: 12px 20px;
+        font-size: 1em;
+        min-width: 120px;
+    }
+    
+    .nav-text {
+        display: none;
+    }
+    
+    .swipe-hint {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .left-side-panel {
+        margin: 10px auto;
+        padding: 0 10px;
+        gap: 15px;
+    }
+    
+    .water-image-container {
+        max-width: 150px;
+    }
+    
+    .water-image {
+        max-height: 150px;
+    }
+    
+    .chatbot-section-book {
+        padding: 12px;
+        gap: 10px;
+        background: transparent;
+    }
+    
+    .chat-cloud-book {
+        padding: 10px 12px;
+        font-size: 0.85em;
+        max-width: 150px;
+        min-width: 100px;
+        right: -170px;
+        top: 5px;
+    }
+    
+    .mic-btn-book {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .mic-icon-book {
+        font-size: 1.5em;
+    }
+    
+    .text-input-book {
+        font-size: 0.8em;
+        padding: 6px 10px;
+    }
+    
+    .send-btn-book {
+        padding: 6px 12px;
+        font-size: 0.8em;
+    }
+    
+    .apply-btn-book,
+    .no-btn-book {
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+    body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .book-container {
+        padding: 0 10px 60px 10px;
+        margin: 10px 0;
+        overflow: visible;
+        height: auto;
+    }
+    
+    .book-wrapper {
+        height: auto;
+        overflow: visible;
+    }
+    
+    .book-pages {
+        height: auto;
+        min-height: 400px;
+        overflow: visible;
+        transform: none;
+        padding: 15px 0;
+    }
+    
+    /* Keep page-turning behavior, just adjust sizing */
+    .book-pages .book-page {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: 400px;
+        max-height: none;
+        padding: 15px;
+    }
+    
+    .table-of-contents {
+        padding: 15px;
+    }
+    
+    .table-of-contents h2 {
+        font-size: 1.5em;
+    }
+    
+    .dish-item {
+        padding: 12px !important;
+        min-height: 180px !important; /* Force consistent height */
+        max-height: 200px !important; /* Force consistent height */
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .dish-content {
+        width: 100%;
+        min-width: 0;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .dish-emoji {
+        font-size: 2.5em;
+    }
+    
+    .dish-name {
+        font-size: 1.1em;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .dish-description {
+        font-size: 0.85em;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+}

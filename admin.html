@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Restaurant Menu Management</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="icon-new.jpg">
+    <link rel="apple-touch-icon" href="icon-new.jpg">
+    
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>
+                <img src="icon-new.jpg" alt="Restaurant logo" class="admin-logo-icon">
+                Restaurant Menu Admin Panel
+            </h1>
+            <p>Manage dishes in MongoDB Atlas</p>
+        </header>
+
+        <div class="admin-content">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <button class="btn btn-primary" onclick="loadDishes()">🔄 Refresh Dishes</button>
+                <button class="btn btn-success" onclick="showAddDishForm()">➕ Add New Dish</button>
+                <button class="btn btn-secondary" onclick="translateAllDishes()">🌐 Translate Dishes</button>
+                <div class="stats">
+                    <span id="dishCount">Loading...</span> dishes in database
+                </div>
+            </div>
+
+            <!-- Add/Edit Dish Form -->
+            <div id="dishFormModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <span class="close" onclick="closeDishForm()">&times;</span>
+                    <h2 id="formTitle">Add New Dish</h2>
+                    <form id="dishForm" onsubmit="saveDish(event)">
+                        <input type="hidden" id="dishId" name="id">
+                        <input type="hidden" id="dishMongoId" name="mongoId">
+
+                        <div class="form-group">
+                            <label for="dishName">Dish Name *</label>
+                            <input type="text" id="dishName" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dishDescription">Description *</label>
+                            <textarea id="dishDescription" name="description" rows="3" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dishIngredients">Ingredients (comma-separated)</label>
+                            <textarea id="dishIngredients" name="ingredients" rows="2" placeholder="romaine lettuce, caesar dressing, croutons, parmesan"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dishPrice">Price (USD) *</label>
+                                <input type="number" id="dishPrice" name="price" step="0.01" min="0" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="dishCategory">Category *</label>
+                                <select id="dishCategory" name="category" required>
+                                    <option value="appetizers">Appetizers</option>
+                                    <option value="mains">Main Courses</option>
+                                    <option value="desserts">Desserts</option>
+                                    <option value="drinks">Drinks</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dishEmoji">Emoji</label>
+                            <input type="text" id="dishEmoji" name="emoji" placeholder="🥗">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dishTags">Tags (comma-separated)</label>
+                            <input type="text" id="dishTags" name="tags" placeholder="vegetarian, gluten-free-option">
+                            <small>Examples: vegetarian, vegan, low-carb, spicy, healthy</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dishAllergens">Allergens (comma-separated)</label>
+                            <input type="text" id="dishAllergens" name="allergens" placeholder="dairy, gluten, nuts">
+                            <small>Examples: dairy, gluten, nuts, shellfish, eggs</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dishRestrictions">Dietary Restrictions (comma-separated)</label>
+                            <input type="text" id="dishRestrictions" name="restrictions" placeholder="high-sugar, caffeine">
+                            <small>Examples: high-sugar, caffeine, alcohol, high-sodium</small>
+                        </div>
+
+                        <div class="form-section-title">Nutrition (per serving)</div>
+                        <div class="nutrition-grid">
+                            <div class="form-group">
+                                <label for="nutritionEnergy">Energy (kcal)</label>
+                                <input type="number" id="nutritionEnergy" name="nutritionEnergy" step="1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nutritionProtein">Protein (g)</label>
+                                <input type="number" id="nutritionProtein" name="nutritionProtein" step="0.1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nutritionFat">Fat (g)</label>
+                                <input type="number" id="nutritionFat" name="nutritionFat" step="0.1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nutritionSatFat">Saturated Fat (g)</label>
+                                <input type="number" id="nutritionSatFat" name="nutritionSatFat" step="0.1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nutritionTransFat">Trans Fat (g)</label>
+                                <input type="number" id="nutritionTransFat" name="nutritionTransFat" step="0.1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nutritionCarbs">Carbohydrates (g)</label>
+                                <input type="number" id="nutritionCarbs" name="nutritionCarbs" step="0.1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nutritionSugars">Sugars (g)</label>
+                                <input type="number" id="nutritionSugars" name="nutritionSugars" step="0.1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="nutritionSodium">Sodium (mg)</label>
+                                <input type="number" id="nutritionSodium" name="nutritionSodium" step="1" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">💾 Save Dish</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeDishForm()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Dishes List -->
+            <div class="dishes-section">
+                <h2>All Dishes</h2>
+                <div id="dishesList" class="dishes-grid">
+                    <p>Loading dishes...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
+
